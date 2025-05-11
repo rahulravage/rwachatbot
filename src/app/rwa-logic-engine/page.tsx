@@ -14,7 +14,7 @@ import LoadingSpinner from '@/components/chat/LoadingSpinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 
-interface RequiredInput extends ProcessRwaTextOutput['requiredInputs'][0] {}
+type RequiredInput = ProcessRwaTextOutput['requiredInputs'][number];
 
 export default function RwaLogicEnginePage() {
   const [pastedResponse, setPastedResponse] = useState('');
