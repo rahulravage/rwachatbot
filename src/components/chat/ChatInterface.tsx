@@ -120,7 +120,7 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-3xl h-[calc(100vh-6rem)] md:h-[calc(100vh-8rem)] flex flex-col shadow-xl rounded-lg overflow-hidden border">
+    <Card className="w-full max-w-3xl flex-grow flex flex-col shadow-xl rounded-lg overflow-hidden border my-4">
       <CardHeader className="border-b p-4 bg-card">
         <CardTitle className="text-lg md:text-xl font-semibold flex items-center gap-2 text-card-foreground">
           <Sparkles className="text-primary h-5 w-5 md:h-6 md:w-6" />

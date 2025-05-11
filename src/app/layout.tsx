@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import Navbar from '@/components/layout/Navbar';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'RegQ Chat',
-  description: 'Chatbot for Regulation Q (CFR Title 12) questions.',
+  title: 'RegQ Chat & RWA Engine',
+  description: 'Chatbot for Regulation Q (CFR Title 12) questions and RWA Logic Engine.',
 };
 
 export default function RootLayout({
@@ -25,8 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans flex flex-col min-h-screen`}>
+        <Navbar />
+        <main className="flex-grow flex flex-col pt-16"> {/* Added pt-16 for navbar height */}
+          {children}
+        </main>
         <Toaster />
       </body>
     </html>

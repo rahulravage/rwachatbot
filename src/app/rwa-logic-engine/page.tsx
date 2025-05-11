@@ -1,10 +1,9 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cog } from "lucide-react";
 
 export default function RwaLogicEnginePage() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+    <main className="flex flex-col items-center justify-center flex-grow bg-background p-4">
       <Card className="w-full max-w-2xl shadow-xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
