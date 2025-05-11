@@ -30,9 +30,9 @@ const ChatInterface: React.FC = () => {
         id: 'initial-bot-message',
         type: 'bot',
         response: {
-          summary: 'Welcome to RegQ Chat!',
-          explanation: 'I can help you with questions about U.S. Regulation Q (CFR Title 12). Type your question below and press Enter or click the send button.',
-          references: 'For example, you can ask "What is the definition of Common Equity Tier 1 capital under § 217.20?"',
+          summary: 'Welcome to the RegQ Chat & RWA Engine!',
+          explanation: 'I can help you with questions about U.S. Regulation Q (CFR Title 12) and assist with RWA (Risk-Weighted Assets) calculations based on the standardized approach. Type your question below.',
+          references: "For example, you can ask 'What is the risk weight for a residential mortgage exposure under the standardized approach?' or 'Explain the treatment of undrawn commitments for RWA purposes.'",
         },
         timestamp: new Date(),
       }
@@ -124,7 +124,7 @@ const ChatInterface: React.FC = () => {
       <CardHeader className="border-b p-4 bg-card">
         <CardTitle className="text-lg md:text-xl font-semibold flex items-center gap-2 text-card-foreground">
           <Sparkles className="text-primary h-5 w-5 md:h-6 md:w-6" />
-          RegQ Chat
+          RegQ Chat & RWA Engine
         </CardTitle>
       </CardHeader>
       
@@ -161,7 +161,7 @@ const ChatInterface: React.FC = () => {
             type="text"
             value={currentQuery}
             onChange={e => setCurrentQuery(e.target.value)}
-            placeholder="Ask about Regulation Q..."
+            placeholder="Ask about Regulation Q or RWA..."
             className="flex-grow text-sm focus-visible:ring-primary/50 h-10"
             disabled={isLoading || !!isSavingResponseForId}
             aria-label="Chat input"

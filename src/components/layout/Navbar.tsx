@@ -22,7 +22,7 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/90 transition-colors">
               <Bot className="h-7 w-7" />
-              <span className="font-semibold text-lg text-foreground">Financial Tools</span>
+              <span className="font-semibold text-lg text-foreground">RegQ Chat &amp; RWA Engine</span>
             </Link>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2">

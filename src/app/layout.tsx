@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'RegQ Chat & RWA Engine',
-  description: 'Chatbot for Regulation Q (CFR Title 12) questions and RWA Logic Engine.',
+  description: 'Chatbot for Regulation Q (CFR Title 12) questions and RWA Logic Engine based on standardized approach.',
 };
 
 export default function RootLayout({
