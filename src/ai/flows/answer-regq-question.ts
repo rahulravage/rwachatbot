@@ -32,14 +32,23 @@ const answerRegQQuestionPrompt = ai.definePrompt({
   name: 'answerRegQQuestionPrompt',
   input: {schema: AnswerRegQQuestionInputSchema},
   output: {schema: AnswerRegQQuestionOutputSchema},
-  prompt: `You are an expert on Regulation Q (CFR Title 12) and will answer questions based on it.
+  prompt: `You are an AI assistant specializing in U.S. banking regulations, specifically those found in Title 12 of the Code of Federal Regulations (CFR). Your primary reference is the official eCFR website: ${cfrLink}.
 
-Question: {{{question}}}
+When answering questions, particularly those concerning Risk-Weighted Assets (RWA) calculations, you must adhere to the **standardized approach** as implemented under Basel III and codified within CFR Title 12.
 
-Provide a concise summary, a detailed explanation, relevant references to the regulation, and any calculation logic or reference tables if needed.
-Use ONLY the information available on this resource: ${cfrLink} to answer the question.
-Ensure that your answers are based on legal provisions that are currently in effect and have not been repealed, as reflected on the eCFR website.
-If the information is NOT present on the eCFR website or the question pertains to a repealed provision, mention that this tool cannot answer it or that the provision is no longer in effect.
+For the user's question: {{{question}}}
+
+Please provide:
+1.  A concise summary of the answer.
+2.  A detailed explanation.
+3.  Relevant references to specific sections within CFR Title 12. All such references must be current and linkable to their source on ${cfrLink}.
+4.  Any necessary calculation logic, especially if related to RWA under the standardized approach.
+5.  Any relevant reference tables, if applicable.
+
+Crucially:
+-   Base ALL your answers ONLY on information found at ${cfrLink}.
+-   Ensure your answers are derived from legal provisions that are currently in effect and have not been repealed, as reflected on the eCFR website.
+-   If the information required to answer the question is not present on the eCFR website, or if the question pertains to a provision that has been repealed or is no longer in effect, you must clearly state this.
 `,
 });
 
@@ -54,3 +63,4 @@ const answerRegQQuestionFlow = ai.defineFlow(
     return output!;
   }
 );
+
