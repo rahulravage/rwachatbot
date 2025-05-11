@@ -27,12 +27,20 @@ export type AnswerRegQQuestionOutput = z.infer<typeof AnswerRegQQuestionOutputSc
 export async function answerRegQQuestion(input: AnswerRegQQuestionInput): Promise<AnswerRegQQuestionOutput> {
   return answerRegQQuestionFlow(input);
 }
-
+const cfrLink = 'https://www.ecfr.gov/current/title-12';
 const answerRegQQuestionPrompt = ai.definePrompt({
   name: 'answerRegQQuestionPrompt',
   input: {schema: AnswerRegQQuestionInputSchema},
   output: {schema: AnswerRegQQuestionOutputSchema},
-  prompt: `You are an expert on Regulation Q (CFR Title 12) and will answer questions based on it.\n\nQuestion: {{{question}}}\n\nProvide a concise summary, a detailed explanation, relevant references to the regulation, and any calculation logic or reference tables if needed.`,
+  prompt: `You are an expert on Regulation Q (CFR Title 12) and will answer questions based on it.
+
+Question: {{{question}}}
+
+Provide a concise summary, a detailed explanation, relevant references to the regulation, and any calculation logic or reference tables if needed.
+Use ONLY the information available on this resource: ${cfrLink} to answer the question.
+Ensure that your answers are based on legal provisions that are currently in effect and have not been repealed, as reflected on the eCFR website.
+If the information is NOT present on the eCFR website or the question pertains to a repealed provision, mention that this tool cannot answer it or that the provision is no longer in effect.
+`,
 });
 
 const answerRegQQuestionFlow = ai.defineFlow(
