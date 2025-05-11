@@ -59,7 +59,7 @@ Context for the RWA calculation (derived from previous analysis or user query, r
 User-provided inputs:
 '''
 {{#each providedInputs}}
-- {{this.key}}: {{this.value}}
+- {{@key}}: {{this}}
 {{/each}}
 '''
 
@@ -67,7 +67,7 @@ Your tasks:
 1.  **Verify Inputs and Context**: Ensure the provided inputs are appropriate for the RWA calculation method described in the 'rwaContext' and CFR Title 12.
 2.  **Calculate RWA**: Perform the RWA calculation using the standardized approach outlined in CFR Title 12, based on the 'rwaContext' and 'providedInputs'.
 3.  **Document Method**: Clearly state the RWA calculation method applied, including specific citations to CFR Title 12 (e.g., "Standardized approach for corporate exposures under 12 CFR § X.Y(z)").
-4.  **Explain Steps**: Provide a detailed, step-by-step explanation of how the RWA was derived. Show all intermediate calculations and reference the specific CFR Title 12 rules applied at each step. If an input is a percentage (e.g., riskWeightPercentage = 50), interpret it as 50% or 0.50 in calculations as appropriate.
+4.  **Explain Steps**: Provide a detailed, step-by-step explanation of how the RWA was derived. Show all intermediate calculations and reference the specific CFR Title 12 rules applied at each step. If an input is a percentage (e.g., riskWeightPercentage = 50), interpret it as 50% or 0.50 in calculations as appropriate. If an input is a boolean (e.g. prudentlyUnderwritten = true), interpret it accordingly.
 
 If the provided information is insufficient or ambiguous for a precise calculation according to CFR Title 12, clearly state what's missing or unclear. Do not make assumptions beyond what is explicitly stated in CFR Title 12 or reasonably inferred from the inputs.
 
@@ -82,13 +82,28 @@ const calculateRwaFlow = ai.defineFlow(
     outputSchema: CalculateRwaOutputSchema,
   },
   async (input) => {
-    // Convert numeric string inputs to numbers for the LLM, especially for percentages
+    // Convert numeric string inputs to numbers, and common boolean-like strings to booleans.
     const processedInputs: Record<string, string | number | boolean> = {};
     for (const key in input.providedInputs) {
       const value = input.providedInputs[key];
-      if (typeof value === 'string' && !isNaN(parseFloat(value))) {
-        processedInputs[key] = parseFloat(value);
+      if (typeof value === 'string') {
+        // Check if it's a numeric string
+        if (!isNaN(parseFloat(value)) && isFinite(Number(value))) {
+          processedInputs[key] = parseFloat(value);
+        } else {
+          // Check if it's a boolean-like string
+          const lowerValue = value.toLowerCase();
+          if (lowerValue === 'yes' || lowerValue === 'true') {
+            processedInputs[key] = true;
+          } else if (lowerValue === 'no' || lowerValue === 'false') {
+            processedInputs[key] = false;
+          } else {
+            // Keep as string if not a clear boolean or number
+            processedInputs[key] = value;
+          }
+        }
       } else {
+        // Value is already a number or boolean
         processedInputs[key] = value;
       }
     }
