@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AnswerRegQQuestionOutput } from '@/ai/flows/answer-regq-question';
@@ -21,25 +22,22 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
 
   useEffect(() => {
     setEditedContent(response);
-    // Only reset editing state if the response fundamentally changes (e.g. new message ID, not just content update of same message)
-    // For simplicity, we'll let it persist if an edit was in progress for the same conceptual message.
-    // Or, if a save is successful, the parent might re-render with isEditing false.
     // If response object identity changes, it implies a new message, so reset editing.
-    if (response !== editedContent) { // Basic check, could be improved with ID
+    if (response !== editedContent && !isSaving) { 
        setIsEditing(false);
     }
-  }, [response]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [response]); // Deliberately not including editedContent to avoid loops on its change
 
   const handleEditToggle = () => {
     if (isEditing) { 
       onSave(editedContent).then(() => {
-        // Optionally turn off editing mode after successful save.
-        // This depends on desired UX. For now, keep it simple.
-        // setIsEditing(false); 
+        setIsEditing(false); 
       }).catch(() => {
         // Handle save error if needed, toast is usually in parent
       });
     } else { 
+      setEditedContent(response); // Ensure editor starts with fresh original data
       setIsEditing(true);
     }
   };
@@ -61,7 +59,8 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
   ) => {
     const value = editedContent[fieldKey] || "";
     // Always render the field if isEditing is true, even if value is empty, to allow adding content.
-    if (!value && !isEditing && !response[fieldKey]) return null;
+    // Or if there is existing content in the original response.
+    if (!response[fieldKey] && !editedContent[fieldKey] && !isEditing) return null;
 
 
     return (
@@ -80,7 +79,7 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
             {isReference ? (
                 typeof value === 'string' ? linkifyCfrText(value) : value
             ) : (
-                (typeof value === 'string' && value.includes('\n')) ? <pre className="whitespace-pre-wrap font-sans text-sm">{value}</pre> : <p className="text-sm">{value}</p>
+                (typeof value === 'string' && value.includes('\n')) ? <pre className="whitespace-pre-wrap font-sans text-sm">{value}</pre> : <p className="text-sm">{value || <span className="italic text-muted-foreground">Not provided</span>}</p>
             )}
           </div>
         )}
@@ -118,3 +117,4 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
 };
 
 export default StructuredResponse;
+
