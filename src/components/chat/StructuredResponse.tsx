@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { AnswerRegQQuestionOutput } from '@/ai/flows/answer-regq-question';
@@ -54,14 +53,14 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
   const renderField = (
     label: string,
     fieldKey: keyof AnswerRegQQuestionOutput,
-    isMultiline: boolean = true,
-    isReference: boolean = false
+    isMultiline: boolean = true
   ) => {
     const value = editedContent[fieldKey] || "";
     // Always render the field if isEditing is true, even if value is empty, to allow adding content.
     // Or if there is existing content in the original response.
     if (!response[fieldKey] && !editedContent[fieldKey] && !isEditing) return null;
 
+    const displayValueIsEmpty = typeof value !== 'string' || value.trim() === "";
 
     return (
       <div className="space-y-1 mb-4">
@@ -76,10 +75,17 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
           />
         ) : (
           <div className="p-3 bg-muted/30 rounded-md text-sm prose prose-sm max-w-none dark:prose-invert break-words">
-            {isReference ? (
-                typeof value === 'string' ? linkifyCfrText(value) : value
+            {displayValueIsEmpty ? (
+              <span className="italic text-muted-foreground">Not provided</span>
+            ) : (fieldKey === 'summary' || fieldKey === 'explanation' || fieldKey === 'references') ? (
+              // For these fields, attempt to linkify CFR references
+              linkifyCfrText(value)
+            ) : (typeof value === 'string' && value.includes('\n')) ? (
+              // For other fields (calcLogic, refTables) if they have newlines, use <pre>
+              <pre className="whitespace-pre-wrap font-sans text-sm">{value}</pre>
             ) : (
-                (typeof value === 'string' && value.includes('\n')) ? <pre className="whitespace-pre-wrap font-sans text-sm">{value}</pre> : <p className="text-sm">{value || <span className="italic text-muted-foreground">Not provided</span>}</p>
+              // Otherwise, use <p>
+              <p className="text-sm">{value}</p>
             )}
           </div>
         )}
@@ -108,7 +114,7 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
       <CardContent className="px-4 py-2 space-y-2">
         {renderField("Summary", "summary", false)}
         {renderField("Detailed Explanation", "explanation")}
-        {renderField("References", "references", true, true)}
+        {renderField("References", "references")}
         {response.calculationLogic || editedContent.calculationLogic || isEditing ? renderField("Calculation Logic", "calculationLogic") : null}
         {response.referenceTables || editedContent.referenceTables || isEditing ? renderField("Reference Tables", "referenceTables") : null}
       </CardContent>
@@ -117,4 +123,3 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
 };
 
 export default StructuredResponse;
-
