@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'RegQ Chat & RWA Engine',
-  description: 'Chatbot for Regulation Q (CFR Title 12) questions and RWA Logic Engine based on standardized approach.',
+  title: 'Basel 3 SA Chatbot & RWA Engine',
+  description: 'Chatbot for U.S. banking regulations (CFR Title 12) questions and RWA Logic Engine based on standardized approach.',
 };
 
 export default function RootLayout({

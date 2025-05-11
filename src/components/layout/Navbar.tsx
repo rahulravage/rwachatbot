@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 
 const navItems = [
-  { href: '/', label: 'RegQ Chat', icon: MessageSquare },
+  { href: '/', label: 'Basel 3 SA Chatbot', icon: MessageSquare },
   { href: '/rwa-logic-engine', label: 'RWA Logic Engine', icon: Cog },
 ];
 
@@ -22,7 +22,7 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/90 transition-colors">
               <Bot className="h-7 w-7" />
-              <span className="font-semibold text-lg text-foreground">RegQ Chat &amp; RWA Engine</span>
+              <span className="font-semibold text-lg text-foreground">Basel 3 SA Chatbot &amp; RWA Engine</span>
             </Link>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2">
