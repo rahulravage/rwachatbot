@@ -11,8 +11,9 @@ import { correctRegQAnswer } from '@/ai/flows/correct-regq-answer';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import ChatMessage from './ChatMessage';
 import LoadingSpinner from './LoadingSpinner';
-import { SendHorizonal, Sparkles } from 'lucide-react';
+import { SendHorizonal, Sparkles, Bot } from 'lucide-react';
 import { Card, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
