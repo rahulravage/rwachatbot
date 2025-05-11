@@ -32,7 +32,7 @@ const InputParameterSchema = z.object({
     .describe('A brief description or help text for the input field, referencing CFR Title 12 if applicable.'),
 });
 
-export const ProcessRwaTextInputSchema = z.object({
+const ProcessRwaTextInputSchema = z.object({
   rwaText: z
     .string()
     .describe(
@@ -41,7 +41,7 @@ export const ProcessRwaTextInputSchema = z.object({
 });
 export type ProcessRwaTextInput = z.infer<typeof ProcessRwaTextInputSchema>;
 
-export const ProcessRwaTextOutputSchema = z.object({
+const ProcessRwaTextOutputSchema = z.object({
   logicSummary: z
     .string()
     .describe(

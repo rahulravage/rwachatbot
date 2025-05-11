@@ -10,7 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const CalculateRwaInputSchema = z.object({
+const CalculateRwaInputSchema = z.object({
   rwaContext: z
     .string()
     .describe(
@@ -24,7 +24,7 @@ export const CalculateRwaInputSchema = z.object({
 });
 export type CalculateRwaInput = z.infer<typeof CalculateRwaInputSchema>;
 
-export const CalculateRwaOutputSchema = z.object({
+const CalculateRwaOutputSchema = z.object({
   calculatedRwa: z
     .number()
     .describe('The final calculated Risk-Weighted Asset (RWA) value.'),
