@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AnswerRegQQuestionOutput } from '@/ai/flows/answer-regq-question';
@@ -6,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { linkifyCfrText } from '@/lib/utils';
-import { Edit3, Save, XCircle } from 'lucide-react';
+import { Edit3, Save, XCircle, Copy } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface StructuredResponseProps {
   response: AnswerRegQQuestionOutput;
@@ -18,6 +20,7 @@ interface StructuredResponseProps {
 const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSave, isSaving }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState<AnswerRegQQuestionOutput>(response);
+  const { toast } = useToast();
 
   useEffect(() => {
     setEditedContent(response);
@@ -48,6 +51,32 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
 
   const handleChange = (field: keyof AnswerRegQQuestionOutput, value: string) => {
     setEditedContent(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCopy = async () => {
+    const contentToCopy = [
+      `Summary: ${response.summary}`,
+      `Detailed Explanation: ${response.explanation}`,
+      `References: ${response.references || 'N/A'}`,
+      response.calculationLogic ? `Calculation Logic: ${response.calculationLogic}` : null,
+      response.referenceTables ? `Reference Tables: ${response.referenceTables}` : null,
+      response.calculationExamples ? `Calculation Examples: ${response.calculationExamples}` : null,
+    ].filter(Boolean).join('\n\n');
+
+    try {
+      await navigator.clipboard.writeText(contentToCopy);
+      toast({
+        title: "Copied to clipboard",
+        description: "Bot response has been copied.",
+      });
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      toast({
+        variant: "destructive",
+        title: "Copy failed",
+        description: "Could not copy response to clipboard.",
+      });
+    }
   };
 
   const renderField = (
@@ -99,6 +128,11 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
         <div className="flex justify-between items-center">
           <CardTitle className="text-base font-semibold">Bot Response</CardTitle>
           <div className="flex gap-2">
+            {!isEditing && (
+              <Button variant="outline" size="sm" onClick={handleCopy} disabled={isSaving}>
+                <Copy className="mr-1 h-4 w-4" /> Copy
+              </Button>
+            )}
             {isEditing && (
               <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isSaving}>
                 <XCircle className="mr-1 h-4 w-4" /> Cancel
@@ -124,3 +158,4 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
 };
 
 export default StructuredResponse;
+
