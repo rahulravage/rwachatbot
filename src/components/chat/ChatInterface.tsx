@@ -56,7 +56,7 @@ const ChatInterface: React.FC = () => {
   }, [messages]);
   
   const stringifyResponse = (res: AnswerRegQQuestionOutput): string => {
-    return `Summary: ${res.summary}\nExplanation: ${res.explanation}\nReferences: ${res.references || 'N/A'}\nCalculation Logic: ${res.calculationLogic || 'N/A'}\nReference Tables: ${res.referenceTables || 'N/A'}`;
+    return `Summary: ${res.summary}\nExplanation: ${res.explanation}\nReferences: ${res.references || 'N/A'}\nCalculation Logic: ${res.calculationLogic || 'N/A'}\nReference Tables: ${res.referenceTables || 'N/A'}\nCalculation Examples: ${res.calculationExamples || 'N/A'}`;
   };
 
   const handleSubmit = async (e?: FormEvent<HTMLFormElement>) => {
@@ -128,7 +128,28 @@ const ChatInterface: React.FC = () => {
 
   const handleSuggestionClick = (suggestion: string) => {
     setCurrentQuery(suggestion);
-    inputRef.current?.focus();
+    // handleSubmit will be triggered by the form's onSubmit after inputRef focuses and user potentially hits enter or clicks send
+    // We want to focus the input so the user can see the suggestion is now the query.
+    inputRef.current?.focus(); 
+    // To immediately send, we can call handleSubmit, but ensure the query is set first.
+    // If we want the user to explicitly send, then just focusing is enough.
+    // For now, let's assume clicking a suggestion implies sending it.
+    // We need to pass the suggestion directly to handleSubmit as currentQuery might not update in time.
+    // Create a synthetic event or call a modified handleSubmit.
+    // For simplicity, we will set the state and then simulate the submit action after a short delay
+    // This ensures the state is updated before handleSubmit uses it.
+    
+    // This will set the query, then the form's onSubmit will handle the submission.
+    // If we want to auto-submit, we need to call handleSubmit logic directly
+    // handleSubmit(); // This would use the old currentQuery value if not careful.
+    // Instead, we can craft a version of handleSubmit or trigger the form submission:
+    // This still relies on user clicking send or pressing enter.
+    // To auto-send:
+    setTimeout(() => {
+        if(inputRef.current?.form) {
+            inputRef.current.form.requestSubmit();
+        }
+    }, 0);
   };
 
   return (

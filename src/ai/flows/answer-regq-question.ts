@@ -21,6 +21,7 @@ const AnswerRegQQuestionOutputSchema = z.object({
   references: z.string().describe('Relevant references to Regulation Q sections.'),
   calculationLogic: z.string().optional().describe('Any necessary calculation logic.'),
   referenceTables: z.string().optional().describe('Any reference tables needed.'),
+  calculationExamples: z.string().optional().describe('Calculation examples for various scenarios related to the user query, particularly for RWA calculations under the standardized approach. Include step-by-step examples where applicable.'),
 });
 export type AnswerRegQQuestionOutput = z.infer<typeof AnswerRegQQuestionOutputSchema>;
 
@@ -44,6 +45,7 @@ Please provide:
 3.  Relevant references to specific sections within CFR Title 12. All such references must be current and linkable to their source on ${cfrLink}.
 4.  Any necessary calculation logic, especially if related to RWA under the standardized approach.
 5.  Any relevant reference tables, if applicable.
+6.  Detailed calculation examples for each possible scenario relevant to the user's query. For RWA calculations, demonstrate the standardized approach with step-by-step examples.
 
 Crucially:
 -   Base ALL your answers ONLY on information found at ${cfrLink}.

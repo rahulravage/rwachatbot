@@ -36,13 +36,13 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
         // Handle save error if needed, toast is usually in parent
       });
     } else { 
-      setEditedContent(response); // Ensure editor starts with fresh original data
+      setEditedContent(JSON.parse(JSON.stringify(response))); // Deep copy to ensure editor starts with fresh original data
       setIsEditing(true);
     }
   };
 
   const handleCancelEdit = () => {
-    setEditedContent(response); 
+    setEditedContent(JSON.parse(JSON.stringify(response))); 
     setIsEditing(false);
   };
 
@@ -81,7 +81,7 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
               // For these fields, attempt to linkify CFR references
               linkifyCfrText(value)
             ) : (typeof value === 'string' && value.includes('\n')) ? (
-              // For other fields (calcLogic, refTables) if they have newlines, use <pre>
+              // For other fields (calcLogic, refTables, calcExamples) if they have newlines, use <pre>
               <pre className="whitespace-pre-wrap font-sans text-sm">{value}</pre>
             ) : (
               // Otherwise, use <p>
@@ -117,6 +117,7 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({ response, onSav
         {renderField("References", "references")}
         {response.calculationLogic || editedContent.calculationLogic || isEditing ? renderField("Calculation Logic", "calculationLogic") : null}
         {response.referenceTables || editedContent.referenceTables || isEditing ? renderField("Reference Tables", "referenceTables") : null}
+        {response.calculationExamples || editedContent.calculationExamples || isEditing ? renderField("Calculation Examples", "calculationExamples") : null}
       </CardContent>
     </Card>
   );
