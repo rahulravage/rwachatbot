@@ -5,5 +5,6 @@ export interface ChatMessage {
   type: 'user' | 'bot';
   text?: string; // For user messages
   response?: AnswerRegQQuestionOutput; // For bot messages
+  suggestions?: string[]; // For bot messages offering suggestions
   timestamp: Date;
 }

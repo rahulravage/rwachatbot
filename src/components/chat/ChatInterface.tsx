@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import type { FormEvent } from 'react';
+import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,15 +25,21 @@ const ChatInterface: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const initialSuggestions = [
+        "What is the risk weight for a AAA-rated corporate exposure?",
+        "Explain the standardized approach for credit risk.",
+        "How are off-balance sheet items treated for RWA calculation?",
+        "Detail the RWA for residential mortgage exposures under the standardized approach."
+    ];
     setMessages([
       {
         id: 'initial-bot-message',
         type: 'bot',
         response: {
           summary: 'Welcome to the Basel 3 SA Chatbot!',
-          explanation: 'I can help you with questions about U.S. banking regulations (CFR Title 12), focusing on Risk-Weighted Assets (RWA) calculations based on the standardized approach. Type your question below.',
-          references: "For example, you can ask 'What is the risk weight for a residential mortgage exposure under the standardized approach?' or 'Explain the treatment of undrawn commitments for RWA purposes.'",
+          explanation: 'I can help you with questions about U.S. banking regulations (CFR Title 12), focusing on Risk-Weighted Assets (RWA) calculations based on the standardized approach. Ask me anything, or try one of these suggestions:',
         },
+        suggestions: initialSuggestions,
         timestamp: new Date(),
       }
     ]);
@@ -51,7 +56,7 @@ const ChatInterface: React.FC = () => {
   }, [messages]);
   
   const stringifyResponse = (res: AnswerRegQQuestionOutput): string => {
-    return `Summary: ${res.summary}\nExplanation: ${res.explanation}\nReferences: ${res.references}\nCalculation Logic: ${res.calculationLogic || 'N/A'}\nReference Tables: ${res.referenceTables || 'N/A'}`;
+    return `Summary: ${res.summary}\nExplanation: ${res.explanation}\nReferences: ${res.references || 'N/A'}\nCalculation Logic: ${res.calculationLogic || 'N/A'}\nReference Tables: ${res.referenceTables || 'N/A'}`;
   };
 
   const handleSubmit = async (e?: FormEvent<HTMLFormElement>) => {
@@ -85,6 +90,7 @@ const ChatInterface: React.FC = () => {
         title: 'Error',
         description: 'Failed to get response. Please try again.',
       });
+      // Rollback user message if bot fails
       setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
     } finally {
       setIsLoading(false);
@@ -120,6 +126,11 @@ const ChatInterface: React.FC = () => {
     }
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setCurrentQuery(suggestion);
+    inputRef.current?.focus();
+  };
+
   return (
     <Card className="w-full max-w-3xl flex-grow flex flex-col shadow-xl rounded-lg overflow-hidden border my-4">
       <CardHeader className="border-b p-4 bg-card">
@@ -137,6 +148,7 @@ const ChatInterface: React.FC = () => {
               message={msg} 
               onSaveResponse={handleSaveResponse} 
               isSavingResponse={isSavingResponseForId === msg.id}
+              onSuggestionClick={handleSuggestionClick}
             />
           ))}
           {isLoading && messages.length > 0 && messages[messages.length-1].type === 'user' && (

@@ -4,6 +4,7 @@ import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import type { AnswerRegQQuestionOutput } from '@/ai/flows/answer-regq-question';
 import StructuredResponse from './StructuredResponse';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Bot, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -11,9 +12,10 @@ interface ChatMessageProps {
   message: ChatMessageType;
   onSaveResponse: (messageId: string, editedResponse: AnswerRegQQuestionOutput) => Promise<void>;
   isSavingResponse: boolean;
+  onSuggestionClick: (suggestion: string) => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, onSaveResponse, isSavingResponse }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, onSaveResponse, isSavingResponse, onSuggestionClick }) => {
   const isUser = message.type === 'user';
 
   return (
@@ -39,6 +41,21 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onSaveResponse, isSa
             onSave={(editedResponse) => onSaveResponse(message.id, editedResponse)}
             isSaving={isSavingResponse}
           />
+        )}
+        {!isUser && message.suggestions && message.suggestions.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2 p-2.5 bg-card border border-border rounded-lg shadow-sm">
+            {message.suggestions.map((suggestion, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto py-1 px-2.5 bg-background hover:bg-primary/10 border-primary/40 text-primary hover:text-primary focus:ring-primary/50 shadow-sm rounded-md"
+                onClick={() => onSuggestionClick(suggestion)}
+              >
+                {suggestion}
+              </Button>
+            ))}
+          </div>
         )}
         <p className={`text-xs text-muted-foreground mt-1.5 px-1`}>
           {message.timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
