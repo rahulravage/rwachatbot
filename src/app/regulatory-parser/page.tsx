@@ -11,6 +11,7 @@ import LoadingSpinner from '@/components/chat/LoadingSpinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { parseRegulatoryDocument, type ParseRegulatoryDocumentOutput } from '@/ai/flows/parse-regulatory-document-flow';
 import { useToast } from '@/hooks/use-toast';
+import { createCfrLink } from '@/lib/utils'; // Added import
 
 export default function RegulatoryParserPage() {
   const [regulatoryLink, setRegulatoryLink] = useState('');
@@ -132,11 +133,29 @@ export default function RegulatoryParserPage() {
                     {parsedData.obligations.map((item, index) => (
                       <tr key={index}>
                         <td className="px-4 py-3 whitespace-normal align-top">{item.obligation}</td>
-                        <td className="px-4 py-3 whitespace-normal align-top text-accent hover:underline">
-                            {item.rule.startsWith('http') ? 
-                                <a href={item.rule} target="_blank" rel="noopener noreferrer">{item.rule}</a> : 
-                                item.rule
+                        <td className="px-4 py-3 whitespace-normal align-top">
+                          {(() => {
+                            let linkUrl: string | null = null;
+                            if (item.rule.startsWith('http://') || item.rule.startsWith('https://')) {
+                              linkUrl = item.rule;
+                            } else {
+                              linkUrl = createCfrLink(item.rule);
                             }
+
+                            if (linkUrl) {
+                              return (
+                                <a
+                                  href={linkUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-accent hover:underline"
+                                >
+                                  {item.rule}
+                                </a>
+                              );
+                            }
+                            return item.rule; 
+                          })()}
                         </td>
                         <td className="px-4 py-3 whitespace-normal align-top">{item.details}</td>
                       </tr>
