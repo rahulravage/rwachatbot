@@ -1,3 +1,4 @@
+
 // src/lib/localStorage.ts
 'use client';
 
@@ -102,4 +103,13 @@ export const clearChatHistory = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(CHAT_HISTORY_KEY);
   // Potentially dispatch an event or use a callback if other parts of the app need to react
+};
+
+export const deleteChatSession = (sessionId: string): void => {
+  if (typeof window === 'undefined') return;
+  const history = getStoredHistory();
+  if (history[sessionId]) {
+    delete history[sessionId];
+    setStoredHistory(history);
+  }
 };
