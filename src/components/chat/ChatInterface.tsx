@@ -14,7 +14,7 @@ import LoadingSpinner from './LoadingSpinner';
 import { SendHorizonal, Sparkles, Bot } from 'lucide-react';
 import { Card, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { saveChatMessage } from '@/lib/localStorage'; // Import localStorage utility
+import { saveChatMessage, getStoredHistory, setStoredHistory } from '@/lib/localStorage'; // Import localStorage utilities
 
 const MAX_HISTORY_TURNS = 5; // Number of user/bot turn pairs to include in history
 
@@ -55,9 +55,6 @@ const ChatInterface: React.FC = () => {
     setMessages([initialBotMessage]);
     
     // DO NOT Save initial bot message to history
-    // if (currentSessionIdRef.current && sessionStartTimeRef.current) {
-    //   saveChatMessage(currentSessionIdRef.current, initialBotMessage, sessionStartTimeRef.current);
-    // }
     inputRef.current?.focus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
@@ -128,8 +125,6 @@ const ChatInterface: React.FC = () => {
         title: 'Error',
         description: 'Failed to get response. Please try again.',
       });
-      // Optionally roll back user message on error, or add an error message from bot
-      // For now, keeping user message.
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -137,7 +132,8 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleSaveResponse = async (messageId: string, editedData: AnswerRegQQuestionOutput) => {
-    if (!currentSessionIdRef.current) return;
+    const sessionId = currentSessionIdRef.current;
+    if (!sessionId) return;
 
     const originalMessageIndex = messages.findIndex(msg => msg.id === messageId && msg.type === 'bot');
     if (originalMessageIndex === -1 || !messages[originalMessageIndex].response) {
@@ -158,14 +154,16 @@ const ChatInterface: React.FC = () => {
       setMessages(updatedMessages);
       
       // Update the specific message in localStorage for the current session
-      const history = JSON.parse(localStorage.getItem('regqChatHistory') || '{}');
-      if (history[currentSessionIdRef.current]) {
-        const sessionMessages = history[currentSessionIdRef.current].messages;
-        const msgIndexInStorage = sessionMessages.findIndex((m: ChatMessageType) => m.id === messageId);
-        if (msgIndexInStorage !== -1) {
-          sessionMessages[msgIndexInStorage] = { ...sessionMessages[msgIndexInStorage], response: editedData, timestamp: new Date().toISOString() };
-          localStorage.setItem('regqChatHistory', JSON.stringify(history));
+      const allHistory = getStoredHistory();
+      if (allHistory[sessionId]) {
+        const sessionToUpdate = allHistory[sessionId];
+        const messageIndexInSession = sessionToUpdate.messages.findIndex(m => m.id === messageId);
+        
+        if (messageIndexInSession !== -1) {
+          sessionToUpdate.messages[messageIndexInSession].response = editedData;
+          sessionToUpdate.messages[messageIndexInSession].timestamp = new Date(); // Update timestamp
         }
+        setStoredHistory(allHistory); // Save the modified history
       }
       
       toast({ title: "Success", description: "Answer updated and saved." });

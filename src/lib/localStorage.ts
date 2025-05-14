@@ -7,7 +7,7 @@ import type { ChatMessage, ChatSession } from '@/types/chat';
 const CHAT_HISTORY_KEY = 'regqChatHistory';
 
 // Helper to safely parse JSON from localStorage
-const getStoredHistory = (): Record<string, ChatSession> => {
+export const getStoredHistory = (): Record<string, ChatSession> => {
   if (typeof window === 'undefined') return {};
   try {
     const rawHistory = localStorage.getItem(CHAT_HISTORY_KEY);
@@ -30,7 +30,7 @@ const getStoredHistory = (): Record<string, ChatSession> => {
 };
 
 // Helper to safely stringify and set JSON to localStorage
-const setStoredHistory = (history: Record<string, ChatSession>): void => {
+export const setStoredHistory = (history: Record<string, ChatSession>): void => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
