@@ -6,43 +6,54 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { FileText, Send } from 'lucide-react';
+import { FileText, Send, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '@/components/chat/LoadingSpinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { parseRegulatoryDocument, type ParseRegulatoryDocumentOutput } from '@/ai/flows/parse-regulatory-document-flow';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RegulatoryParserPage() {
   const [regulatoryLink, setRegulatoryLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [parsedData, setParsedData] = useState<any | null>(null); // Replace 'any' with a proper type later
+  const [parsedData, setParsedData] = useState<ParseRegulatoryDocumentOutput | null>(null);
+  const { toast } = useToast();
 
   const handleSubmit = async () => {
     if (!regulatoryLink.trim()) {
       setError('Please enter a regulatory link.');
+      toast({ variant: "destructive", title: "Input Error", description: "Please enter a regulatory link." });
       return;
     }
+    // Basic URL validation
+    try {
+        new URL(regulatoryLink);
+    } catch (_) {
+        setError('Invalid URL format. Please enter a valid link.');
+        toast({ variant: "destructive", title: "Input Error", description: "Invalid URL format." });
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     setParsedData(null);
-    // Placeholder for actual parsing logic
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-    // Simulating an error for demonstration - remove in actual implementation
-    if (regulatoryLink.includes("error")) {
-        setError("Simulated error: Could not parse the provided link. Please ensure it's a valid eCFR link.");
-    } else if (regulatoryLink.includes("empty")) {
-        setParsedData({ summaryTable: [] }); // Simulate empty result
+    
+    try {
+      const result = await parseRegulatoryDocument({ documentUrl: regulatoryLink });
+      setParsedData(result);
+      if (result.obligations.length === 0) {
+        toast({ title: "Parsing Complete", description: "No specific obligations were extracted, or the document might not be a standard eCFR page." });
+      } else {
+        toast({ title: "Parsing Successful", description: `Extracted ${result.obligations.length} obligation(s).` });
+      }
+    } catch (err) {
+      console.error('Error parsing regulatory document:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred during parsing.';
+      setError(`Failed to parse document: ${errorMessage}`);
+      toast({ variant: "destructive", title: "Parsing Error", description: errorMessage });
+    } finally {
+      setIsLoading(false);
     }
-     else {
-      // Placeholder data
-      setParsedData({
-        summaryTable: [
-          { obligation: 'Maintain minimum capital ratios', rule: '12 CFR § 217.10', details: 'Banks must maintain specific capital adequacy ratios.' },
-          { obligation: 'Report suspicious activities', rule: '31 CFR § 1020.320', details: 'Financial institutions must file SARs for certain transactions.' },
-        ],
-        sourceTitle: "Example Regulation Document Title"
-      });
-    }
-    setIsLoading(false);
   };
 
   return (
@@ -54,7 +65,7 @@ export default function RegulatoryParserPage() {
             Regulatory Obligations Parser
           </CardTitle>
           <CardDescription>
-            Enter a link to a regulatory document (e.g., from eCFR). The tool will attempt to parse and summarize key obligations and rules. (This is a placeholder and will be fully implemented later)
+            Enter a link to a regulatory document (preferably from eCFR.gov). The tool will attempt to parse and summarize key obligations and rules.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -64,7 +75,10 @@ export default function RegulatoryParserPage() {
               id="regulatoryLink"
               type="url"
               value={regulatoryLink}
-              onChange={(e) => setRegulatoryLink(e.target.value)}
+              onChange={(e) => {
+                setRegulatoryLink(e.target.value)
+                if (error) setError(null); // Clear error on input change
+              }}
               placeholder="e.g., https://www.ecfr.gov/current/title-12/chapter-II/part-217"
               className="mt-1 text-sm"
               disabled={isLoading}
@@ -90,7 +104,7 @@ export default function RegulatoryParserPage() {
 
       {error && (
         <Alert variant="destructive" className="w-full max-w-3xl">
-          <FileText className="h-4 w-4" />
+          <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Parsing Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -100,10 +114,11 @@ export default function RegulatoryParserPage() {
         <Card className="w-full max-w-3xl shadow-xl">
           <CardHeader>
             <CardTitle className="text-lg">Parsed Obligations Summary</CardTitle>
-            {parsedData.sourceTitle && <CardDescription>Source: {parsedData.sourceTitle}</CardDescription>}
+            {parsedData.sourceTitle && <CardDescription>Source Document Title: {parsedData.sourceTitle}</CardDescription>}
+            {!parsedData.sourceTitle && <CardDescription>Obligations extracted from the provided link.</CardDescription>}
           </CardHeader>
           <CardContent>
-            {parsedData.summaryTable && parsedData.summaryTable.length > 0 ? (
+            {parsedData.obligations && parsedData.obligations.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-border text-sm">
                   <thead className="bg-muted/50">
@@ -114,11 +129,10 @@ export default function RegulatoryParserPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border bg-background">
-                    {parsedData.summaryTable.map((item: any, index: number) => (
+                    {parsedData.obligations.map((item, index) => (
                       <tr key={index}>
                         <td className="px-4 py-3 whitespace-normal align-top">{item.obligation}</td>
-                        <td className="px-4 py-3 whitespace-nowrap align-top text-accent hover:underline">
-                            {/* Basic link detection - improve with actual linkifier if needed */}
+                        <td className="px-4 py-3 whitespace-normal align-top text-accent hover:underline">
                             {item.rule.startsWith('http') ? 
                                 <a href={item.rule} target="_blank" rel="noopener noreferrer">{item.rule}</a> : 
                                 item.rule
@@ -131,19 +145,26 @@ export default function RegulatoryParserPage() {
                 </table>
               </div>
             ) : (
-              <p className="text-muted-foreground">No specific obligations or rules were extracted from the provided link, or the document format is not yet supported.</p>
+              <Alert>
+                <FileText className="h-4 w-4" />
+                <AlertTitle>No Obligations Extracted</AlertTitle>
+                <AlertDescription>
+                  No specific obligations or rules were extracted. This could be because the document format is not recognized, the link does not point to a standard eCFR page, or the content does not contain clearly defined obligations based on the parsing logic.
+                </AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
       )}
        <Alert className="w-full max-w-3xl" variant="default">
         <FileText className="h-4 w-4" />
-        <AlertTitle>Feature Under Development</AlertTitle>
+        <AlertTitle>About this Tool</AlertTitle>
         <AlertDescription>
-          The ability to parse regulatory documents and extract obligations is currently a placeholder. 
-          Full functionality will be implemented in a future update. The current table is for demonstration purposes.
+          This tool uses AI to attempt to parse regulatory documents from eCFR.gov links. 
+          The accuracy and completeness of the extracted information depend on the AI model's understanding and the structure of the source document. Always verify critical information with the official source.
         </AlertDescription>
       </Alert>
     </main>
   );
 }
+
