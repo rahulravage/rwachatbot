@@ -14,6 +14,7 @@ import LoadingSpinner from './LoadingSpinner';
 import { SendHorizonal, Sparkles, Bot } from 'lucide-react';
 import { Card, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { saveChatMessage } from '@/lib/localStorage'; // Import localStorage utility
 
 const MAX_HISTORY_TURNS = 5; // Number of user/bot turn pairs to include in history
 
@@ -25,28 +26,41 @@ const ChatInterface: React.FC = () => {
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const currentSessionIdRef = useRef<string | null>(null);
+  const sessionStartTimeRef = useRef<Date | null>(null);
 
   useEffect(() => {
+    // Initialize session
+    if (!currentSessionIdRef.current) {
+      currentSessionIdRef.current = crypto.randomUUID();
+      sessionStartTimeRef.current = new Date();
+    }
+
     const initialSuggestions = [
         "What is the risk weight for a AAA-rated corporate exposure?",
         "Explain the standardized approach for credit risk.",
         "How are off-balance sheet items treated for RWA calculation?",
         "Detail the RWA for residential mortgage exposures under the standardized approach."
     ];
-    setMessages([
-      {
-        id: 'initial-bot-message',
-        type: 'bot',
-        response: {
-          summary: 'Welcome to the Basel 3 SA Chatbot!',
-          explanation: 'I can help you with questions about U.S. banking regulations (CFR Title 12), focusing on Risk-Weighted Assets (RWA) calculations based on the standardized approach. Ask me anything, or try one of these suggestions:',
-        },
-        suggestions: initialSuggestions,
-        timestamp: new Date(),
-      }
-    ]);
+    const initialBotMessage: ChatMessageType = {
+      id: 'initial-bot-message',
+      type: 'bot',
+      response: {
+        summary: 'Welcome to the Basel 3 SA Chatbot!',
+        explanation: 'I can help you with questions about U.S. banking regulations (CFR Title 12), focusing on Risk-Weighted Assets (RWA) calculations based on the standardized approach. Ask me anything, or try one of these suggestions:',
+      },
+      suggestions: initialSuggestions,
+      timestamp: new Date(),
+    };
+    setMessages([initialBotMessage]);
+    
+    // Save initial bot message to history
+    if (currentSessionIdRef.current && sessionStartTimeRef.current) {
+      saveChatMessage(currentSessionIdRef.current, initialBotMessage, sessionStartTimeRef.current);
+    }
     inputRef.current?.focus();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -61,9 +75,16 @@ const ChatInterface: React.FC = () => {
     return `Summary: ${res.summary}\nExplanation: ${res.explanation}\nReferences: ${res.references || 'N/A'}\nCalculation Logic: ${res.calculationLogic || 'N/A'}\nReference Tables: ${res.referenceTables || 'N/A'}\nCalculation Examples: ${res.calculationExamples || 'N/A'}`;
   };
 
+  const addMessageAndSave = (message: ChatMessageType) => {
+    setMessages(prev => [...prev, message]);
+    if (currentSessionIdRef.current && sessionStartTimeRef.current) {
+      saveChatMessage(currentSessionIdRef.current, message, sessionStartTimeRef.current);
+    }
+  };
+
   const handleSubmit = async (e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
-    if (!currentQuery.trim() || isLoading) return;
+    if (!currentQuery.trim() || isLoading || !currentSessionIdRef.current) return;
 
     const userMessage: ChatMessageType = {
       id: `user-${Date.now()}`,
@@ -71,22 +92,19 @@ const ChatInterface: React.FC = () => {
       text: currentQuery,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMessage]);
+    addMessageAndSave(userMessage);
+    
     const questionToAsk = currentQuery;
     setCurrentQuery('');
     setIsLoading(true);
 
-    // Prepare conversation history
     const historyToSend: ConversationTurn[] = [];
-    // Take up to the last MAX_HISTORY_TURNS * 2 messages (to get pairs of user/bot messages)
-    // Exclude the very first initial bot message from history if it's just a welcome.
     const recentMessages = messages.filter(msg => msg.id !== 'initial-bot-message').slice(-(MAX_HISTORY_TURNS * 2));
 
     recentMessages.forEach(msg => {
       if (msg.type === 'user' && msg.text) {
         historyToSend.push({ speaker: 'User', text: msg.text });
       } else if (msg.type === 'bot' && msg.response) {
-        // Using summary for brevity in history
         historyToSend.push({ speaker: 'AI Summary', text: msg.response.summary });
       }
     });
@@ -102,7 +120,7 @@ const ChatInterface: React.FC = () => {
         response: botResponseData,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, botMessage]);
+      addMessageAndSave(botMessage);
     } catch (error) {
       console.error('Error fetching bot response:', error);
       toast({
@@ -110,8 +128,8 @@ const ChatInterface: React.FC = () => {
         title: 'Error',
         description: 'Failed to get response. Please try again.',
       });
-      // Rollback user message if bot fails
-      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+      // Optionally roll back user message on error, or add an error message from bot
+      // For now, keeping user message.
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -119,24 +137,37 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleSaveResponse = async (messageId: string, editedData: AnswerRegQQuestionOutput) => {
-    const originalMessage = messages.find(msg => msg.id === messageId && msg.type === 'bot');
-    if (!originalMessage || !originalMessage.response) {
+    if (!currentSessionIdRef.current) return;
+
+    const originalMessageIndex = messages.findIndex(msg => msg.id === messageId && msg.type === 'bot');
+    if (originalMessageIndex === -1 || !messages[originalMessageIndex].response) {
       toast({ variant: "destructive", title: "Error", description: "Original message not found." });
       return;
     }
 
     setIsSavingResponseForId(messageId);
     try {
-      const originalAnswerStr = stringifyResponse(originalMessage.response);
+      const originalAnswerStr = stringifyResponse(messages[originalMessageIndex].response!);
       const editedAnswerStr = stringifyResponse(editedData);
       
       await correctRegQAnswer({ originalAnswer: originalAnswerStr, editedAnswer: editedAnswerStr });
       
-      setMessages(prevMessages =>
-        prevMessages.map(msg =>
-          msg.id === messageId ? { ...msg, response: editedData, timestamp: new Date(), isEditing: false } : msg
-        )
+      const updatedMessages = messages.map(msg =>
+        msg.id === messageId ? { ...msg, response: editedData, timestamp: new Date(), isEditing: false } : msg
       );
+      setMessages(updatedMessages);
+      
+      // Update the specific message in localStorage for the current session
+      const history = JSON.parse(localStorage.getItem('regqChatHistory') || '{}');
+      if (history[currentSessionIdRef.current]) {
+        const sessionMessages = history[currentSessionIdRef.current].messages;
+        const msgIndexInStorage = sessionMessages.findIndex((m: ChatMessageType) => m.id === messageId);
+        if (msgIndexInStorage !== -1) {
+          sessionMessages[msgIndexInStorage] = { ...sessionMessages[msgIndexInStorage], response: editedData, timestamp: new Date().toISOString() };
+          localStorage.setItem('regqChatHistory', JSON.stringify(history));
+        }
+      }
+      
       toast({ title: "Success", description: "Answer updated and saved." });
     } catch (error) {
       console.error("Error saving answer:", error);
@@ -215,3 +246,4 @@ const ChatInterface: React.FC = () => {
 };
 
 export default ChatInterface;
+

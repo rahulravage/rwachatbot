@@ -7,4 +7,11 @@ export interface ChatMessage {
   response?: AnswerRegQQuestionOutput; // For bot messages, now includes calculationExamples
   suggestions?: string[]; // For bot messages offering suggestions
   timestamp: Date;
+  isEditing?: boolean; // Added for StructuredResponse state management
+}
+
+export interface ChatSession {
+  id: string;
+  startTime: Date;
+  messages: ChatMessage[];
 }

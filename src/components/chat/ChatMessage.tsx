@@ -10,12 +10,19 @@ import { Card, CardContent } from '@/components/ui/card';
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  onSaveResponse: (messageId: string, editedResponse: AnswerRegQQuestionOutput) => Promise<void>;
-  isSavingResponse: boolean;
-  onSuggestionClick: (suggestion: string) => void;
+  onSaveResponse?: (messageId: string, editedResponse: AnswerRegQQuestionOutput) => Promise<void>;
+  isSavingResponse?: boolean;
+  onSuggestionClick?: (suggestion: string) => void;
+  isHistoryView?: boolean; // New prop
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, onSaveResponse, isSavingResponse, onSuggestionClick }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ 
+  message, 
+  onSaveResponse, 
+  isSavingResponse, 
+  onSuggestionClick,
+  isHistoryView = false // Default to false
+}) => {
   const isUser = message.type === 'user';
 
   return (
@@ -38,11 +45,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onSaveResponse, isSa
         {!isUser && message.response && (
           <StructuredResponse 
             response={message.response} 
-            onSave={(editedResponse) => onSaveResponse(message.id, editedResponse)}
+            onSave={!isHistoryView && onSaveResponse ? (editedResponse) => onSaveResponse(message.id, editedResponse) : undefined}
             isSaving={isSavingResponse}
+            isHistoryView={isHistoryView} // Pass down
           />
         )}
-        {!isUser && message.suggestions && message.suggestions.length > 0 && (
+        {!isUser && message.suggestions && message.suggestions.length > 0 && !isHistoryView && onSuggestionClick && (
           <div className="mt-2 flex flex-wrap gap-2 p-2.5 bg-card border border-border rounded-lg shadow-sm">
             {message.suggestions.map((suggestion, index) => (
               <Button
@@ -58,7 +66,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onSaveResponse, isSa
           </div>
         )}
         <p className={`text-xs text-muted-foreground mt-1.5 px-1`}>
-          {message.timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+          {new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
         </p>
       </div>
       {isUser && (
