@@ -3,13 +3,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bot, Cog, MessageSquare } from 'lucide-react';
+import { Bot, Cog, MessageSquare, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 
 const navItems = [
   { href: '/', label: 'Basel 3 SA Chatbot', icon: MessageSquare },
   { href: '/rwa-logic-engine', label: 'RWA Logic Engine', icon: Cog },
+  { href: '/chat-history', label: 'Chat History', icon: History },
 ];
 
 export default function Navbar() {
