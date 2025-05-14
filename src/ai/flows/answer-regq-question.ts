@@ -28,7 +28,7 @@ export type AnswerRegQQuestionOutput = z.infer<typeof AnswerRegQQuestionOutputSc
 export async function answerRegQQuestion(input: AnswerRegQQuestionInput): Promise<AnswerRegQQuestionOutput> {
   return answerRegQQuestionFlow(input);
 }
-const cfrLink = 'https://www.ecfr.gov/current/title-12';
+const cfrLink = 'https://www.ecfr.gov/current/title-12/chapter-II/subchapter-A/part-217';
 const answerRegQQuestionPrompt = ai.definePrompt({
   name: 'answerRegQQuestionPrompt',
   input: {schema: AnswerRegQQuestionInputSchema},
@@ -41,7 +41,7 @@ For the user's question: {{{question}}}
 
 Please provide:
 1.  A concise summary of the answer.
-2.  A detailed explanation.
+2.  A detailed explanation. Consider relevant product types related to the user's query (e.g., corporate loans, residential mortgages, derivatives, etc.) when formulating your explanation.
 3.  Relevant references to specific sections within CFR Title 12. All such references must be current and linkable to their source on ${cfrLink}.
 4.  Any necessary calculation logic, especially if related to RWA under the standardized approach.
 5.  Any relevant reference tables, if applicable.
