@@ -15,7 +15,7 @@ import { SendHorizonal, Sparkles, Bot } from 'lucide-react';
 import { Card, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-const MAX_HISTORY_TURNS = 3; // Number of user/bot turn pairs to include in history
+const MAX_HISTORY_TURNS = 5; // Number of user/bot turn pairs to include in history
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
