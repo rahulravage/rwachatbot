@@ -14,4 +14,5 @@ export interface ChatSession {
   id: string;
   startTime: Date;
   messages: ChatMessage[];
+  summary?: string; // Added for AI-generated session summary
 }

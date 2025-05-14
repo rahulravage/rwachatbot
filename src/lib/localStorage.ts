@@ -19,6 +19,7 @@ const getStoredHistory = (): Record<string, ChatSession> => {
         ...msg,
         timestamp: new Date(msg.timestamp),
       }));
+      // summary is optional and a string, so no conversion needed here unless complex object
     });
     return parsed;
   } catch (error) {
@@ -52,6 +53,7 @@ export const saveChatMessage = (
       id: sessionId,
       startTime: sessionStartTime || new Date(),
       messages: [],
+      summary: undefined, // Initialize summary
     };
   }
   
@@ -66,19 +68,29 @@ export const saveChatMessage = (
   setStoredHistory(history);
 };
 
+export const updateSessionSummary = (sessionId: string, summary: string): void => {
+  if (typeof window === 'undefined') return;
+  const history = getStoredHistory();
+  if (history[sessionId]) {
+    history[sessionId].summary = summary;
+    setStoredHistory(history);
+  }
+};
+
 export const getAllChatSessions = (): ChatSession[] => {
   if (typeof window === 'undefined') return [];
   const history = getStoredHistory();
   return Object.values(history)
     .map(session => ({
       ...session,
-      startTime: new Date(session.startTime), // Ensure startTime is a Date object
+      startTime: new Date(session.startTime), 
       messages: session.messages.map(msg => ({
         ...msg,
-        timestamp: new Date(msg.timestamp) // Ensure timestamps are Date objects
+        timestamp: new Date(msg.timestamp) 
       })),
+      // summary is already part of the session object
     }))
-    .sort((a, b) => b.startTime.getTime() - a.startTime.getTime()); // Sort by most recent session first
+    .sort((a, b) => b.startTime.getTime() - a.startTime.getTime()); 
 };
 
 
@@ -94,6 +106,7 @@ export const getSession = (sessionId: string): ChatSession | null => {
         ...msg,
         timestamp: new Date(msg.timestamp)
       })),
+      // summary is already part of the session object
     };
   }
   return null;
@@ -102,7 +115,6 @@ export const getSession = (sessionId: string): ChatSession | null => {
 export const clearChatHistory = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(CHAT_HISTORY_KEY);
-  // Potentially dispatch an event or use a callback if other parts of the app need to react
 };
 
 export const deleteChatSession = (sessionId: string): void => {
