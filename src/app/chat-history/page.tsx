@@ -125,7 +125,7 @@ export default function ChatHistoryPage() {
             <Accordion type="single" collapsible className="w-full space-y-2">
               {sessions.map((session) => (
                 <AccordionItem value={`session-${session.id}`} key={session.id} className="bg-muted/30 rounded-lg border shadow-sm">
-                  <div className="flex items-center"> {/* Removed pr-2 from here */}
+                  <div className="flex items-center"> 
                     <AccordionTrigger className="flex-grow px-4 py-3 hover:bg-muted/50 rounded-t-lg text-sm font-medium text-primary">
                        Session started: {formatDate(session.startTime)} ({session.messages.length} messages)
                     </AccordionTrigger>
@@ -134,7 +134,7 @@ export default function ChatHistoryPage() {
                          <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="text-muted-foreground hover:text-destructive ml-2 shrink-0 p-1 h-7 w-7" // ml-2 provides spacing
+                            className="text-muted-foreground hover:text-destructive shrink-0 p-1 h-7 w-7" // Removed ml-2
                             onClick={(e) => {e.stopPropagation(); setSessionToDelete(session.id);}} // Prevent accordion toggle
                           >
                           <Trash2 className="h-4 w-4" />
