@@ -8,6 +8,7 @@ export interface ChatMessage {
   suggestions?: string[]; // For bot messages offering suggestions
   timestamp: Date;
   isEditing?: boolean; // Added for StructuredResponse state management
+  isEditedByUser?: boolean; // To indicate if the user has edited the bot's response
 }
 
 export interface ChatSession {

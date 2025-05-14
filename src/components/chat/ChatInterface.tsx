@@ -149,7 +149,7 @@ const ChatInterface: React.FC = () => {
       await correctRegQAnswer({ originalAnswer: originalAnswerStr, editedAnswer: editedAnswerStr });
       
       const updatedMessages = messages.map(msg =>
-        msg.id === messageId ? { ...msg, response: editedData, timestamp: new Date(), isEditing: false } : msg
+        msg.id === messageId ? { ...msg, response: editedData, timestamp: new Date(), isEditing: false, isEditedByUser: true } : msg
       );
       setMessages(updatedMessages);
       
@@ -162,6 +162,7 @@ const ChatInterface: React.FC = () => {
         if (messageIndexInSession !== -1) {
           sessionToUpdate.messages[messageIndexInSession].response = editedData;
           sessionToUpdate.messages[messageIndexInSession].timestamp = new Date(); // Update timestamp
+          sessionToUpdate.messages[messageIndexInSession].isEditedByUser = true; // Mark as edited
         }
         setStoredHistory(allHistory); // Save the modified history
       }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
@@ -5,7 +6,7 @@ import type { AnswerRegQQuestionOutput } from '@/ai/flows/answer-regq-question';
 import StructuredResponse from './StructuredResponse';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, Edit2 } from 'lucide-react'; // Added Edit2 for indicator
 import { Card, CardContent } from '@/components/ui/card';
 
 interface ChatMessageProps {
@@ -65,9 +66,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             ))}
           </div>
         )}
-        <p className={`text-xs text-muted-foreground mt-1.5 px-1`}>
-          {new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-        </p>
+        <div className="flex items-center gap-1.5">
+          <p className={`text-xs text-muted-foreground mt-1.5 px-1`}>
+            {new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+          </p>
+          {!isUser && message.isEditedByUser && (
+            <span className="text-xs text-muted-foreground italic mt-1.5 flex items-center">
+              <Edit2 size={10} className="mr-0.5" /> User corrected
+            </span>
+          )}
+        </div>
       </div>
       {isUser && (
          <Avatar className="h-8 w-8 self-start mt-1 shrink-0">
