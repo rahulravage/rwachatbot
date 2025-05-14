@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-function createCfrLink(reference: string): string | null {
+export function createCfrLink(reference: string): string | null {
   // Matches patterns like § 217.10, § 217.10(a), §217.10, 12 CFR 217.10
   // This regex attempts to capture common CFR citation patterns.
   const cfrRegex = /(?:(\d{1,2})\s*CFR\s*)?(?:§\s*|\bPart\s*)?([\d\w]+)(?:\.([\d\w\.\(\)-]+))?/;
