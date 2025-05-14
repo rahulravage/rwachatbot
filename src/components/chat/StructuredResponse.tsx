@@ -30,30 +30,34 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({
 
   useEffect(() => {
     setEditedContent(response);
+    // Only exit edit mode if the response prop itself has changed AND we are not currently in the process of saving.
+    // This prevents exiting edit mode prematurely if the parent re-renders for other reasons while an edit is in progress.
     if (response !== editedContent && !isSaving) { 
        setIsEditing(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response]);
+  }, [response]); // Dependency on `response` is correct here. `editedContent` and `isSaving` should not be deps for this specific effect.
 
   const handleEditToggle = () => {
     if (isHistoryView || !onSave) return; // Do nothing if in history view or no onSave handler
 
     if (isEditing) { 
+      // This is the "Save" action
       onSave(editedContent).then(() => {
-        setIsEditing(false); 
+        setIsEditing(false); // Exit edit mode on successful save
       }).catch(() => {
-        // Error handling is typically in parent via toast
+        // Error handling is typically in parent via toast, keep edit mode active
       });
     } else { 
-      setEditedContent(JSON.parse(JSON.stringify(response))); 
+      // This is the "Edit" action
+      setEditedContent(JSON.parse(JSON.stringify(response))); // Reset to current pristine response before editing
       setIsEditing(true);
     }
   };
 
   const handleCancelEdit = () => {
     if (isHistoryView) return;
-    setEditedContent(JSON.parse(JSON.stringify(response))); 
+    setEditedContent(JSON.parse(JSON.stringify(response))); // Revert to original response state
     setIsEditing(false);
   };
 
@@ -94,12 +98,14 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({
     isMultiline: boolean = true
   ) => {
     const value = editedContent[fieldKey] || "";
+    // Only render the field if it exists in the original response, or in the edited content,
+    // or if we are in edit mode (to allow adding content to initially empty fields).
     if (!response[fieldKey] && !editedContent[fieldKey] && !(isEditing && !isHistoryView)) return null;
 
     const displayValueIsEmpty = typeof value !== 'string' || value.trim() === "";
 
     return (
-      <div className="space-y-1 mb-4">
+      <div className="w-full space-y-1 mb-4">
         <Label htmlFor={fieldKey} className="text-sm font-semibold text-foreground/90">{label}</Label>
         {(isEditing && !isHistoryView) ? (
           <Textarea
@@ -154,10 +160,11 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-4 py-2 space-y-2">
+      <CardContent className="w-full px-4 py-2 space-y-2">
         {renderField("Summary", "summary", false)}
         {renderField("Detailed Explanation", "explanation")}
         {renderField("References", "references")}
+        {/* Conditionally render optional fields only if they have content or if in edit mode */}
         {response.calculationLogic || editedContent.calculationLogic || (isEditing && !isHistoryView) ? renderField("Calculation Logic", "calculationLogic") : null}
         {response.referenceTables || editedContent.referenceTables || (isEditing && !isHistoryView) ? renderField("Reference Tables", "referenceTables") : null}
         {response.calculationExamples || editedContent.calculationExamples || (isEditing && !isHistoryView) ? renderField("Calculation Examples", "calculationExamples") : null}
@@ -167,4 +174,3 @@ const StructuredResponse: React.FC<StructuredResponseProps> = ({
 };
 
 export default StructuredResponse;
-
