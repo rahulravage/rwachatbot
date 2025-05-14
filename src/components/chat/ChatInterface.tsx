@@ -54,10 +54,10 @@ const ChatInterface: React.FC = () => {
     };
     setMessages([initialBotMessage]);
     
-    // Save initial bot message to history
-    if (currentSessionIdRef.current && sessionStartTimeRef.current) {
-      saveChatMessage(currentSessionIdRef.current, initialBotMessage, sessionStartTimeRef.current);
-    }
+    // DO NOT Save initial bot message to history
+    // if (currentSessionIdRef.current && sessionStartTimeRef.current) {
+    //   saveChatMessage(currentSessionIdRef.current, initialBotMessage, sessionStartTimeRef.current);
+    // }
     inputRef.current?.focus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
