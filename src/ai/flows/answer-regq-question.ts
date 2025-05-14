@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Answers questions about Regulation Q (CFR Title 12).
@@ -5,13 +6,21 @@
  * - answerRegQQuestion - A function that answers a question about Regulation Q.
  * - AnswerRegQQuestionInput - The input type for the answerRegQQuestion function.
  * - AnswerRegQQuestionOutput - The return type for the answerRegQQuestion function.
+ * - ConversationTurn - The type for a single turn in the conversation history.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const ConversationTurnSchema = z.object({
+  speaker: z.string().describe("Identifies who spoke, e.g., 'User' or 'AI Summary'"),
+  text: z.string().describe("The text of that turn.")
+});
+export type ConversationTurn = z.infer<typeof ConversationTurnSchema>;
+
 const AnswerRegQQuestionInputSchema = z.object({
   question: z.string().describe('The question about Regulation Q.'),
+  conversationHistoryItems: z.array(ConversationTurnSchema).optional().describe('Previous turns in the conversation, where speaker is "User" or "AI Summary".'),
 });
 export type AnswerRegQQuestionInput = z.infer<typeof AnswerRegQQuestionInputSchema>;
 
@@ -37,7 +46,16 @@ const answerRegQQuestionPrompt = ai.definePrompt({
 
 When answering questions, particularly those concerning Risk-Weighted Assets (RWA) calculations, you must adhere to the **standardized approach** as implemented under Basel III and codified within CFR Title 12.
 
-For the user's question: {{{question}}}
+{{#if conversationHistoryItems}}
+Here is the conversation history (user questions and AI summaries):
+{{#each conversationHistoryItems}}
+  {{this.speaker}}: {{this.text}}
+{{/each}}
+---
+{{/if}}
+
+Considering the conversation history above (if any), please answer the following new question from the user.
+User's new question: {{{question}}}
 
 Please provide:
 1.  A concise summary of the answer.

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { answerRegQQuestion, type AnswerRegQQuestionOutput } from '@/ai/flows/answer-regq-question';
+import { answerRegQQuestion, type AnswerRegQQuestionOutput, type ConversationTurn } from '@/ai/flows/answer-regq-question';
 import { correctRegQAnswer } from '@/ai/flows/correct-regq-answer';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import ChatMessage from './ChatMessage';
@@ -14,6 +14,8 @@ import LoadingSpinner from './LoadingSpinner';
 import { SendHorizonal, Sparkles, Bot } from 'lucide-react';
 import { Card, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+const MAX_HISTORY_TURNS = 3; // Number of user/bot turn pairs to include in history
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
@@ -74,8 +76,26 @@ const ChatInterface: React.FC = () => {
     setCurrentQuery('');
     setIsLoading(true);
 
+    // Prepare conversation history
+    const historyToSend: ConversationTurn[] = [];
+    // Take up to the last MAX_HISTORY_TURNS * 2 messages (to get pairs of user/bot messages)
+    // Exclude the very first initial bot message from history if it's just a welcome.
+    const recentMessages = messages.filter(msg => msg.id !== 'initial-bot-message').slice(-(MAX_HISTORY_TURNS * 2));
+
+    recentMessages.forEach(msg => {
+      if (msg.type === 'user' && msg.text) {
+        historyToSend.push({ speaker: 'User', text: msg.text });
+      } else if (msg.type === 'bot' && msg.response) {
+        // Using summary for brevity in history
+        historyToSend.push({ speaker: 'AI Summary', text: msg.response.summary });
+      }
+    });
+
     try {
-      const botResponseData = await answerRegQQuestion({ question: questionToAsk });
+      const botResponseData = await answerRegQQuestion({
+        question: questionToAsk,
+        conversationHistoryItems: historyToSend.length > 0 ? historyToSend : undefined,
+      });
       const botMessage: ChatMessageType = {
         id: `bot-${Date.now()}`,
         type: 'bot',
@@ -114,7 +134,7 @@ const ChatInterface: React.FC = () => {
       
       setMessages(prevMessages =>
         prevMessages.map(msg =>
-          msg.id === messageId ? { ...msg, response: editedData, timestamp: new Date() } : msg
+          msg.id === messageId ? { ...msg, response: editedData, timestamp: new Date(), isEditing: false } : msg
         )
       );
       toast({ title: "Success", description: "Answer updated and saved." });
@@ -128,23 +148,7 @@ const ChatInterface: React.FC = () => {
 
   const handleSuggestionClick = (suggestion: string) => {
     setCurrentQuery(suggestion);
-    // handleSubmit will be triggered by the form's onSubmit after inputRef focuses and user potentially hits enter or clicks send
-    // We want to focus the input so the user can see the suggestion is now the query.
     inputRef.current?.focus(); 
-    // To immediately send, we can call handleSubmit, but ensure the query is set first.
-    // If we want the user to explicitly send, then just focusing is enough.
-    // For now, let's assume clicking a suggestion implies sending it.
-    // We need to pass the suggestion directly to handleSubmit as currentQuery might not update in time.
-    // Create a synthetic event or call a modified handleSubmit.
-    // For simplicity, we will set the state and then simulate the submit action after a short delay
-    // This ensures the state is updated before handleSubmit uses it.
-    
-    // This will set the query, then the form's onSubmit will handle the submission.
-    // If we want to auto-submit, we need to call handleSubmit logic directly
-    // handleSubmit(); // This would use the old currentQuery value if not careful.
-    // Instead, we can craft a version of handleSubmit or trigger the form submission:
-    // This still relies on user clicking send or pressing enter.
-    // To auto-send:
     setTimeout(() => {
         if(inputRef.current?.form) {
             inputRef.current.form.requestSubmit();
